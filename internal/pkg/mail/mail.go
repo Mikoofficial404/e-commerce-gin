@@ -1,0 +1,71 @@
+package mail
+
+import (
+	"fmt"
+	"log"
+	"net/smtp"
+	"os"
+	"strconv"
+
+	"github.com/joho/godotenv"
+)
+
+type Config struct {
+	Host     string
+	Port     int
+	Username string
+	Password string
+	From     string
+}
+
+// LoadConfig loads SMTP configuration from environment variables
+func LoadConfig() *Config {
+	err := godotenv.Load()
+	if err != nil {
+		log.Println("⚠️  Warning: .env file not found, using system env")
+	}
+
+	port, _ := strconv.Atoi(os.Getenv("SMTP_PORT"))
+	if port == 0 {
+		port = 587 // default
+	}
+
+	return &Config{
+		Host:     os.Getenv("SMTP_HOST"),
+		Port:     port,
+		Username: os.Getenv("SMTP_USERNAME"),
+		Password: os.Getenv("SMTP_PASSWORD"),
+		From:     os.Getenv("SMTP_FROM"),
+	}
+}
+
+func SendWelcomeEmail(toEmail string) error {
+
+	config := LoadConfig()
+
+	if config.Host == "" || config.Username == "" || config.Password == "" {
+		return fmt.Errorf("missing required SMTP configuration")
+	}
+
+	auth := smtp.PlainAuth("", config.Username, config.Password, config.Host)
+
+	from := config.From
+	if from == "" {
+		from = "admin@tokosukses.com" // default fallback
+	}
+
+	msg := []byte("To: " + toEmail + "\r\n" +
+		"From: " + from + "\r\n" +
+		"Subject: Selamat Datang di Toko Kami!\r\n" +
+		"\r\n" +
+		"Terima kasih telah bergabung. Ayo mulai belanja!\r\n")
+
+	addr := config.Host + ":" + strconv.Itoa(config.Port)
+	err := smtp.SendMail(addr, auth, from, []string{toEmail}, msg)
+	if err != nil {
+		return fmt.Errorf("failed to send email: %w", err)
+	}
+
+	log.Printf("✅ Welcome email sent successfully to %s", toEmail)
+	return nil
+}

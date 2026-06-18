@@ -3,23 +3,26 @@ package service
 import (
 	"ecommerce-gin/internal/domain"
 	"ecommerce-gin/internal/pkg/jwt"
+	"ecommerce-gin/internal/pkg/rabbitmq"
 	"ecommerce-gin/internal/repository/postgres"
 	"fmt"
 	"os"
 	"time"
 
 	"github.com/google/uuid"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 type UserService struct {
-	user postgres.UserRepository
+	user       postgres.UserRepository
+	rabbitConn *amqp.Connection
 }
 
-func NewUserService(repo *postgres.UserRepository) *UserService {
-	return &UserService{user: *repo}
+func NewUserService(repo *postgres.UserRepository, rabbitConn *amqp.Connection) *UserService {
+	return &UserService{user: *repo, rabbitConn: rabbitConn}
 }
 
-func (s *UserService) Register(email string, nama string, password string) (*domain.User, error) {
+func (s *UserService) Register(email string, nama string, password string, phone string) (*domain.User, error) {
 	//TODO  Hash password dulu sebelum simpan
 	JwtPass, err := jwt.HashPassword(password)
 	if err != nil {
@@ -27,15 +30,17 @@ func (s *UserService) Register(email string, nama string, password string) (*dom
 	}
 
 	user := domain.User{
-		Email:    email,
-		FullName: nama,
-		Password: JwtPass,
+		Email:       email,
+		FullName:    nama,
+		Password:    JwtPass,
+		PhoneNumber: phone,
 	}
 	//TODO Lempar ke repository
 	isResult, err := s.user.CreateUser(&user)
 	if err != nil {
 		return nil, err
 	}
+	rabbitmq.PublishMessage(s.rabbitConn, "email_queue", email)
 	return isResult, nil
 }
 

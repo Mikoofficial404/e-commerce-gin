@@ -19,8 +19,14 @@ func main() {
 		log.Fatal(err)
 	}
 	defer sqlDB.Close()
+	rabbitConn, err := rabbitmq.ConnectRabbitMQ()
+	if err != nil {
+		log.Fatal("Gagal konek RabbitMQ")
+	}
+	defer rabbitConn.Close()
+	rabbitmq.ConsumeMessage(rabbitConn, "email_queue")
 	repo := postgres.NewUserRepository(db)
-	svc := service.NewUserService(repo)
+	svc := service.NewUserService(repo, rabbitConn)
 	userHandler := handler.NewUserHandler(svc)
 
 	repoProduct := postgres.NewProductRepository(db)
@@ -28,12 +34,6 @@ func main() {
 	productHandler := handler.NewProductHandler(svcProduct)
 
 	r := router.SetupRouter(userHandler, productHandler)
-
-	rabbitConn, err := rabbitmq.ConnectRabbitMQ()
-	if err != nil {
-		log.Fatal("Gagal konek RabbitMQ")
-	}
-	defer rabbitConn.Close()
 
 	appPort := os.Getenv("APP_PORT")
 	if appPort == "" {

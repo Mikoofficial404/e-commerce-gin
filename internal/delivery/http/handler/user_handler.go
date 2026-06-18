@@ -29,7 +29,7 @@ func (h *UserHandler) Register(c *gin.Context) {
 		return
 	}
 	//TODO ambil field dari struct
-	data, err := h.userServices.Register(input.Email, input.FullName, input.Password)
+	data, err := h.userServices.Register(input.Email, input.FullName, input.Password, input.PhoneNumber)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

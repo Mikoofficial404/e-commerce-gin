@@ -7,12 +7,12 @@ import (
 	"ecommerce-gin/internal/delivery/http/handler"
 	"ecommerce-gin/internal/delivery/http/router"
 	"ecommerce-gin/internal/pkg/database"
+	"ecommerce-gin/internal/pkg/rabbitmq"
 	"ecommerce-gin/internal/repository/postgres"
 	"ecommerce-gin/internal/service"
 )
 
 func main() {
-
 	db := database.DatabaseCon()
 	sqlDB, err := db.DB()
 	if err != nil {
@@ -22,7 +22,18 @@ func main() {
 	repo := postgres.NewUserRepository(db)
 	svc := service.NewUserService(repo)
 	userHandler := handler.NewUserHandler(svc)
-	r := router.SetupRouter(userHandler)
+
+	repoProduct := postgres.NewProductRepository(db)
+	svcProduct := service.NewProductService(repoProduct)
+	productHandler := handler.NewProductHandler(svcProduct)
+
+	r := router.SetupRouter(userHandler, productHandler)
+
+	rabbitConn, err := rabbitmq.ConnectRabbitMQ()
+	if err != nil {
+		log.Fatal("Gagal konek RabbitMQ")
+	}
+	defer rabbitConn.Close()
 
 	appPort := os.Getenv("APP_PORT")
 	if appPort == "" {

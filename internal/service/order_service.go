@@ -4,10 +4,12 @@ import (
 	"context"
 	"ecommerce-gin/internal/domain"
 	"ecommerce-gin/internal/dto/request"
+	"ecommerce-gin/internal/pkg/rabbitmq"
 	"ecommerce-gin/internal/repository/postgres"
 	"fmt"
 	"os"
 
+	amqp "github.com/rabbitmq/amqp091-go"
 	xendit "github.com/xendit/xendit-go/v7"
 	"github.com/xendit/xendit-go/v7/invoice"
 )
@@ -15,10 +17,12 @@ import (
 type OrderService struct {
 	orderRepo   postgres.OrderRepository
 	productRepo postgres.ProductRepository
+	userRepo    postgres.UserRepository
+	rabbitConn  *amqp.Connection
 }
 
-func NewOrderService(orderRepo *postgres.OrderRepository, productRepo *postgres.ProductRepository) *OrderService {
-	return &OrderService{orderRepo: *orderRepo, productRepo: *productRepo}
+func NewOrderService(orderRepo *postgres.OrderRepository, productRepo *postgres.ProductRepository, userRepo *postgres.UserRepository, rabbitConn *amqp.Connection) *OrderService {
+	return &OrderService{orderRepo: *orderRepo, productRepo: *productRepo, userRepo: *userRepo, rabbitConn: rabbitConn}
 }
 
 func (s *OrderService) CreateOrder(userID string, items []request.OrderItemRequest) (string, error) {
@@ -78,6 +82,14 @@ func (s *OrderService) PayOrder(orderID string) error {
 	err := s.orderRepo.UpdateStatus(orderID, "PAID")
 	if err != nil {
 		return err
+	}
+
+	order, err := s.orderRepo.FindById(orderID)
+	if err == nil {
+		user, err := s.userRepo.FindById(order.UserID)
+		if err == nil {
+			rabbitmq.PublishMessage(s.rabbitConn, "invoice_queue", user.Email)
+		}
 	}
 	return nil
 }

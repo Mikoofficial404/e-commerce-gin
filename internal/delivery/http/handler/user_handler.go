@@ -21,6 +21,13 @@ func NewUserHandler(svc *service.UserService) *UserHandler {
 	return &UserHandler{userServices: *svc}
 }
 
+// @Summary Register a new user
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param request body request.RegisterRequest true "Register Payload"
+// @Success 201 {object} map[string]interface{} "Registration successful"
+// @Router /register [post]
 func (h *UserHandler) Register(c *gin.Context) {
 	var input request.RegisterRequest
 	//TODO bind
@@ -38,6 +45,14 @@ func (h *UserHandler) Register(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"status": "registration successful", "data": data})
 	return
 }
+
+// @Summary Login With Jwt Tokens
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param request body request.LoginRequest true "Login Payload"
+// @Success 200 {object} map[string]interface{} "Success"
+// @Router /login [post]
 
 func (h *UserHandler) Login(c *gin.Context) {
 	var input request.LoginRequest

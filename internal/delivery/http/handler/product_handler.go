@@ -22,6 +22,17 @@ func NewProductHandler(svc *service.ProductService) *ProductHandler {
 	return &ProductHandler{productService: *svc}
 }
 
+// @Summary Create a new product
+// @Tags Products
+// @Accept multipart/form-data
+// @Produce json
+// @Param name formData string true "Product Name"
+// @Param description formData string true "Product Description"
+// @Param price formData number true "Price"
+// @Param stock formData integer true "Stock"
+// @Param file formData file true "Product Image"
+// @Success 200 {object} map[string]interface{} "Upload successful"
+// @Router /products [post]
 func (h *ProductHandler) Create(c *gin.Context) {
 	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, MaxUploadSize)
 	if err := c.Request.ParseMultipartForm(MaxUploadSize); err != nil {
@@ -75,11 +86,38 @@ func (h *ProductHandler) Create(c *gin.Context) {
 	})
 }
 
+// @Summary Get All Product with caching
+// @Tags Products
+// @Accept json
+// @Produce json
+// @Param page query int false "Page number"
+// @Param limit query int false "Limit per page"
+// @Param search query string false "Search query"
+// @Success 200 {object} map[string]interface{} "Success"
+// @Router /products [get]
 func (h *ProductHandler) FindAll(c *gin.Context) {
-	isResult, err := h.productService.FindAllProduct()
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+	search := c.Query("search")
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 {
+		limit = 10
+	}
+
+	isResult, total, err := h.productService.FindAllProduct(page, limit, search)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusAccepted, gin.H{"status": "Get All Data", "data:": isResult})
+	c.JSON(http.StatusOK, gin.H{
+		"status": "success",
+		"data":   isResult,
+		"meta": gin.H{
+			"page":  page,
+			"limit": limit,
+			"total": total,
+		},
+	})
 }

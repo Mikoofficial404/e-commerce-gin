@@ -22,6 +22,13 @@ func NewOrderHandler(svc *service.OrderService) *OrderHandler {
 	return &OrderHandler{orderService: *svc}
 }
 
+// @Summary Create a new order
+// @Tags Orders
+// @Accept json
+// @Produce json
+// @Param request body request.OrderRequest true "Order Payload"
+// @Success 201 {object} map[string]interface{} "Order Created"
+// @Router /api/orders [post]
 func (h *OrderHandler) CreateOrder(c *gin.Context) {
 	userId, exists := c.Get("user_id")
 	if !exists {
@@ -42,6 +49,13 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"status": "Order Created", "payment_url": invoiceUrl})
 }
 
+// @Summary Xendit Payment Webhook
+// @Tags Webhook
+// @Accept json
+// @Produce json
+// @Param request body XenditCallback true "Callback Payload"
+// @Success 200 {object} map[string]interface{} "Payment processed"
+// @Router /webhook/xendit [post]
 func (h *OrderHandler) WebhookPayment(c *gin.Context) {
 	var callback XenditCallback
 	if err := c.ShouldBindJSON(&callback); err != nil {

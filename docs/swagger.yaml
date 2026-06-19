@@ -1,0 +1,187 @@
+definitions:
+  ecommerce-gin_internal_dto_request.OrderItemRequest:
+    properties:
+      product_id:
+        type: string
+      quantity:
+        type: integer
+    required:
+    - product_id
+    - quantity
+    type: object
+  ecommerce-gin_internal_dto_request.OrderRequest:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/ecommerce-gin_internal_dto_request.OrderItemRequest'
+        type: array
+    required:
+    - items
+    type: object
+  ecommerce-gin_internal_dto_request.RegisterRequest:
+    properties:
+      email:
+        type: string
+      full_name:
+        type: string
+      password:
+        minLength: 6
+        type: string
+      phone_number:
+        type: string
+    required:
+    - email
+    - full_name
+    - password
+    - phone_number
+    type: object
+  internal_delivery_http_handler.XenditCallback:
+    properties:
+      external_id:
+        type: string
+      status:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: E-commerce-gin with a queue(rabitmq) and caching(redis) and integrated
+    payment gateway Xendit
+  title: E-Commerce-Api
+  version: "1.0"
+paths:
+  /api/orders:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Order Payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/ecommerce-gin_internal_dto_request.OrderRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Order Created
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Create a new order
+      tags:
+      - Orders
+  /products:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Limit per page
+        in: query
+        name: limit
+        type: integer
+      - description: Search query
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get All Product with caching
+      tags:
+      - Products
+    post:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: Product Name
+        in: formData
+        name: name
+        required: true
+        type: string
+      - description: Product Description
+        in: formData
+        name: description
+        required: true
+        type: string
+      - description: Price
+        in: formData
+        name: price
+        required: true
+        type: number
+      - description: Stock
+        in: formData
+        name: stock
+        required: true
+        type: integer
+      - description: Product Image
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Upload successful
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Create a new product
+      tags:
+      - Products
+  /register:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Register Payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/ecommerce-gin_internal_dto_request.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Registration successful
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Register a new user
+      tags:
+      - Auth
+  /webhook/xendit:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Callback Payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_delivery_http_handler.XenditCallback'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Payment processed
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Xendit Payment Webhook
+      tags:
+      - Webhook
+swagger: "2.0"

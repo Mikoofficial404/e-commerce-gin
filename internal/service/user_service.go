@@ -34,6 +34,7 @@ func (s *UserService) Register(email string, nama string, password string, phone
 		FullName:    nama,
 		Password:    JwtPass,
 		PhoneNumber: phone,
+		Role:        "customer",
 	}
 	//TODO Lempar ke repository
 	isResult, err := s.user.CreateUser(&user)
@@ -69,7 +70,7 @@ func (s *UserService) Login(email string, pasword string) (string, error) {
 
 	jwtSecret := os.Getenv("JWT_SECRET")
 	// TODO buat JWTToken
-	jwtMake, err := jwt.MakeJWT(parseUUID, jwtSecret, time.Hour*24)
+	jwtMake, err := jwt.MakeJWT(parseUUID, isUser.Role, jwtSecret, time.Hour*24)
 	if err != nil {
 		return "", fmt.Errorf("failed to create JWT token")
 	}

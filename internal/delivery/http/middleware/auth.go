@@ -17,12 +17,24 @@ func AuthMiddleware() gin.HandlerFunc {
 		}
 
 		secret := os.Getenv("JWT_SECRET")
-		validateJwt, err := jwt.ValidateJWT(jwtBearer, secret)
+		validateJwt, role, err := jwt.ValidateJWT(jwtBearer, secret)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusBadGateway, 401)
 			return
 		}
 		c.Set("user_id", validateJwt)
+		c.Set("role", role)
+		c.Next()
+	}
+}
+
+func AdminMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		role, exists := c.Get("role")
+		if !exists || role != "admin" {
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Admin access required"})
+			return
+		}
 		c.Next()
 	}
 }

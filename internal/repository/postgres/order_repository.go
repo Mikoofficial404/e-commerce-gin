@@ -42,3 +42,9 @@ func (r *OrderRepository) UpdateStatus(orderID string, newStatus string) error {
 	}
 	return nil
 }
+
+func (r *OrderRepository) FindById(id string) (*domain.Order, error) {
+	var result domain.Order
+	err := r.dbGorm.Where("id = ?", id).First(&result).Error
+	return &result, err
+}

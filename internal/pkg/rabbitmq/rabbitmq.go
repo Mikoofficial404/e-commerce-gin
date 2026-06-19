@@ -48,16 +48,21 @@ func ConsumeMessage(conn *amqp.Connection, queueName string) error {
 	go func() {
 		for d := range msgs {
 			targetEmail := string(d.Body)
-			log.Printf("Received task from RabbitMQ: %s", d.Body)
+			log.Printf("📥 Received task from RabbitMQ: %s", d.Body)
 
-			err := mail.SendWelcomeEmail(targetEmail)
-			if err != nil {
-				log.Printf("Failed to send welcome email to %s: %v", targetEmail, err)
-			} else {
-				log.Printf("Successfully sent  email to %s", targetEmail)
+			if queueName == "email_queue" {
+				err := mail.SendWelcomeEmail(targetEmail)
+				if err != nil {
+					log.Printf("❌ Failed to send welcome email to %s: %v", targetEmail, err)
+				}
+			} else if queueName == "invoice_queue" {
+				err := mail.SendInvoiceEmail(targetEmail)
+				if err != nil {
+					log.Printf("❌ Failed to send invoice email to %s: %v", targetEmail, err)
+				}
 			}
 		}
 	}()
-	log.Printf("Started consuming messages from queue: %s", queueName)
+	log.Printf("🚀 Started consuming messages from queue: %s", queueName)
 	return nil
 }

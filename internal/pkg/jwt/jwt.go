@@ -15,6 +15,7 @@ import (
 )
 
 type MyCustomClaims struct {
+	Role string `json:"role"`
 	jwt.RegisteredClaims
 }
 
@@ -34,10 +35,11 @@ func CheckPasswordHash(password, hash string) (bool, error) {
 	return match, err
 }
 
-func MakeJWT(userID uuid.UUID, tokenSecret string, expiresIn time.Duration) (string, error) {
+func MakeJWT(userID uuid.UUID, role string, tokenSecret string, expiresIn time.Duration) (string, error) {
 	mySigningKey := []byte(tokenSecret)
 	claims := MyCustomClaims{
-		jwt.RegisteredClaims{
+		Role: role,
+		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(expiresIn)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			Issuer:    "ecommerce-access",
@@ -49,23 +51,23 @@ func MakeJWT(userID uuid.UUID, tokenSecret string, expiresIn time.Duration) (str
 	return ss, err
 }
 
-func ValidateJWT(tokenString, tokenSecret string) (uuid.UUID, error) {
-	claims := &jwt.RegisteredClaims{}
+func ValidateJWT(tokenString, tokenSecret string) (uuid.UUID, string, error) {
+	claims := &MyCustomClaims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		return []byte(tokenSecret), nil
 	})
 	if err != nil {
-		return uuid.UUID{}, fmt.Errorf("failed to parse token: %w", err)
+		return uuid.UUID{}, "", fmt.Errorf("failed to parse token: %w", err)
 	}
 	if !token.Valid {
-		return uuid.UUID{}, fmt.Errorf("invalid token")
+		return uuid.UUID{}, "", fmt.Errorf("invalid token")
 	}
 	userID, err := uuid.Parse(claims.Subject)
 	if err != nil {
 		log.Printf("Error parsing user ID from claims: %v", err)
-		return uuid.Nil, err
+		return uuid.Nil, "", err
 	}
-	return userID, nil
+	return userID, claims.Role, nil
 }
 
 func GetBearerToken(headers http.Header) (string, error) {

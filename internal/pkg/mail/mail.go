@@ -69,3 +69,34 @@ func SendWelcomeEmail(toEmail string) error {
 	log.Printf("✅ Welcome email sent successfully to %s", toEmail)
 	return nil
 }
+
+func SendInvoiceEmail(toEmail string) error {
+
+	config := LoadConfig()
+
+	if config.Host == "" || config.Username == "" || config.Password == "" {
+		return fmt.Errorf("missing required SMTP configuration")
+	}
+
+	auth := smtp.PlainAuth("", config.Username, config.Password, config.Host)
+
+	from := config.From
+	if from == "" {
+		from = "admin@tokosukses.com"
+	}
+
+	msg := []byte("To: " + toEmail + "\r\n" +
+		"From: " + from + "\r\n" +
+		"Subject: Payment Received!\r\n" +
+		"\r\n" +
+		"Thank you! We have received your payment. Your order is now being processed.\r\n")
+
+	addr := config.Host + ":" + strconv.Itoa(config.Port)
+	err := smtp.SendMail(addr, auth, from, []string{toEmail}, msg)
+	if err != nil {
+		return fmt.Errorf("failed to send email: %w", err)
+	}
+
+	log.Printf("✅ Invoice email sent successfully to %s", toEmail)
+	return nil
+}

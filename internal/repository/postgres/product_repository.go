@@ -24,14 +24,23 @@ func (r *ProductRepository) CreateProduct(product *domain.Product) (*domain.Prod
 	return product, nil
 }
 
-func (r *ProductRepository) FindAllProduct() ([]*domain.Product, error) {
+func (r *ProductRepository) FindAllProduct(page, limit int, search string) ([]*domain.Product, int64, error) {
 	var products []*domain.Product
-	result := r.dbGorm.Find(&products)
-	err := result.Error
-	if err != nil {
-		return nil, err
+	var total int64
+
+	query := r.dbGorm.Model(&domain.Product{})
+	if search != "" {
+		query = query.Where("name ILIKE ?", "%"+search+"%")
 	}
-	return products, nil
+
+	query.Count(&total)
+
+	offset := (page - 1) * limit
+	err := query.Offset(offset).Limit(limit).Find(&products).Error
+	if err != nil {
+		return nil, 0, err
+	}
+	return products, total, nil
 }
 
 func (r *ProductRepository) FindById(id string) (*domain.Product, error) {

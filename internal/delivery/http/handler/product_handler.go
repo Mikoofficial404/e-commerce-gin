@@ -1,10 +1,10 @@
 package handler
 
 import (
+	"ecommerce-gin/internal/dto/request"
 	"ecommerce-gin/internal/service"
 	"fmt"
 	"net/http"
-	"path/filepath"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -46,34 +46,19 @@ func (h *ProductHandler) Create(c *gin.Context) {
 		return
 	}
 
-	file, err := c.FormFile("file")
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "file form required"})
+	var input request.ProductCreateRequest
+	if err := c.ShouldBind(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	name := c.PostForm("name")
-	description := c.PostForm("description")
+	// dst := filepath.Join("./public/uploads/", filepath.Base(input.File.Filename))
+	// if err := c.SaveUploadedFile(input.File, dst); err != nil {
+	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save file"})
+	// 	return
+	// }
 
-	price, err := strconv.ParseFloat(c.PostForm("price"), 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid price"})
-		return
-	}
-
-	stock, err := strconv.Atoi(c.PostForm("stock"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid stock"})
-		return
-	}
-
-	dst := filepath.Join("./public/uploads/", filepath.Base(file.Filename))
-	if err := c.SaveUploadedFile(file, dst); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save file"})
-		return
-	}
-
-	product, err := h.productService.CreateProduct(name, description, price, stock, dst)
+	product, err := h.productService.CreateProduct(input.Name, input.Description, input.Price, input.Stock, input.File)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -81,7 +66,7 @@ func (h *ProductHandler) Create(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"message":  "upload successful",
-		"filename": file.Filename,
+		"filename": input.File.Filename,
 		"product":  product,
 	})
 }

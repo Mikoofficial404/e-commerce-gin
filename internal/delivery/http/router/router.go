@@ -21,6 +21,7 @@ func SetupRouter(userHandler *handler.UserHandler, productHandle *handler.Produc
 			"message": "pong",
 		})
 	})
+	r.Use(middleware.CorsMiddleware())
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	r.Static("/public", "./public")
 	r.POST("/register", userHandler.Register)

@@ -14,6 +14,7 @@ import (
 	"ecommerce-gin/internal/pkg/database"
 	"ecommerce-gin/internal/pkg/rabbitmq"
 	"ecommerce-gin/internal/pkg/redis"
+	"ecommerce-gin/internal/pkg/storage"
 	"ecommerce-gin/internal/repository/postgres"
 	"ecommerce-gin/internal/service"
 )
@@ -43,12 +44,14 @@ func main() {
 	}
 	defer rdb.Close()
 
+	s3conn := storage.ConnectS3()
+
 	repo := postgres.NewUserRepository(db)
 	svc := service.NewUserService(repo, rabbitConn)
 	userHandler := handler.NewUserHandler(svc)
 
 	repoProduct := postgres.NewProductRepository(db)
-	svcProduct := service.NewProductService(repoProduct, rdb)
+	svcProduct := service.NewProductService(repoProduct, rdb, s3conn)
 	productHandler := handler.NewProductHandler(svcProduct)
 
 	repoOrder := postgres.NewOrderRepository(db)

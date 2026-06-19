@@ -4,12 +4,13 @@ import (
 	"context"
 	"ecommerce-gin/internal/pkg/mail"
 	"log"
+	"os"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 func ConnectRabbitMQ() (*amqp.Connection, error) {
-	const url = "amqp://guest:guest@localhost:5672/"
+	url := os.Getenv("url_rabbitmq")
 	dialCreate, err := amqp.Dial(url)
 	if err != nil {
 		return nil, err

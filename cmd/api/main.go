@@ -21,10 +21,11 @@ func main() {
 	defer sqlDB.Close()
 	rabbitConn, err := rabbitmq.ConnectRabbitMQ()
 	if err != nil {
-		log.Fatal("Gagal konek RabbitMQ")
+		log.Fatal("Failed to connect to RabbitMQ")
 	}
 	defer rabbitConn.Close()
-	rabbitmq.ConsumeMessage(rabbitConn, "email_queue")
+	// rabbitmq.ConsumeMessage(rabbitConn, "email_queue")
+
 	repo := postgres.NewUserRepository(db)
 	svc := service.NewUserService(repo, rabbitConn)
 	userHandler := handler.NewUserHandler(svc)
@@ -33,15 +34,19 @@ func main() {
 	svcProduct := service.NewProductService(repoProduct)
 	productHandler := handler.NewProductHandler(svcProduct)
 
-	r := router.SetupRouter(userHandler, productHandler)
+	repoOrder := postgres.NewOrderRepository(db)
+	svcOrder := service.NewOrderService(repoOrder, repoProduct)
+	orderHandler := handler.NewOrderHandler(svcOrder)
+
+	r := router.SetupRouter(userHandler, productHandler, orderHandler)
 
 	appPort := os.Getenv("APP_PORT")
 	if appPort == "" {
 		appPort = "8080"
 	}
 
-	log.Printf("Memulai server di port :%s...\n", appPort)
+	log.Printf("Starting server on port :%s...\n", appPort)
 	if err := r.Run(":" + appPort); err != nil {
-		log.Fatalf("Server gagal berjalan: %v", err)
+		log.Fatalf("Server failed to start: %v", err)
 	}
 }

@@ -22,7 +22,7 @@ func AuthMiddleware() gin.HandlerFunc {
 			c.AbortWithStatusJSON(http.StatusBadGateway, 401)
 			return
 		}
-		c.Set("UserID", validateJwt)
+		c.Set("user_id", validateJwt)
 		c.Next()
 	}
 }

@@ -35,7 +35,7 @@ func (h *UserHandler) Register(c *gin.Context) {
 		return
 	}
 	//TODO panggil Register dan return response
-	c.JSON(http.StatusCreated, gin.H{"status": "you are succesfull register", "data": data})
+	c.JSON(http.StatusCreated, gin.H{"status": "registration successful", "data": data})
 	return
 }
 
@@ -52,6 +52,6 @@ func (h *UserHandler) Login(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusCreated, gin.H{"status": "you are logged in", "data": data})
+	c.JSON(http.StatusCreated, gin.H{"status": "login successful", "data": data})
 	return
 }

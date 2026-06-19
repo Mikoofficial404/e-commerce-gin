@@ -56,9 +56,9 @@ func SendWelcomeEmail(toEmail string) error {
 
 	msg := []byte("To: " + toEmail + "\r\n" +
 		"From: " + from + "\r\n" +
-		"Subject: Selamat Datang di Toko Kami!\r\n" +
+		"Subject: Welcome to Our Store!\r\n" +
 		"\r\n" +
-		"Terima kasih telah bergabung. Ayo mulai belanja!\r\n")
+		"Thank you for joining. Let's start shopping!\r\n")
 
 	addr := config.Host + ":" + strconv.Itoa(config.Port)
 	err := smtp.SendMail(addr, auth, from, []string{toEmail}, msg)

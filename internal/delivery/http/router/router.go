@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func SetupRouter(userHandler *handler.UserHandler, productHandle *handler.ProductHandler) *gin.Engine {
+func SetupRouter(userHandler *handler.UserHandler, productHandle *handler.ProductHandler, orderHandle *handler.OrderHandler) *gin.Engine {
 	r := gin.Default()
 
 	r.GET("/ping", func(c *gin.Context) {
@@ -21,11 +21,9 @@ func SetupRouter(userHandler *handler.UserHandler, productHandle *handler.Produc
 	r.POST("/login", userHandler.Login)
 	r.POST("/products", productHandle.Create)
 	r.GET("/products", productHandle.FindAll)
+	r.POST("/webhook/xendit", orderHandle.WebhookPayment)
 	protected := r.Group("/api")
 	protected.Use(middleware.AuthMiddleware())
-
-	protected.GET("/profile", func(c *gin.Context) {
-		c.JSON(200, gin.H{"message": "Selamat datang di area rahasia!"})
-	})
+	protected.POST("/orders", orderHandle.CreateOrder)
 	return r
 }

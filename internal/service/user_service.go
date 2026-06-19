@@ -51,27 +51,27 @@ func (s *UserService) Login(email string, pasword string) (string, error) {
 		Email: email,
 	})
 	if err != nil {
-		return "", fmt.Errorf("email tidak terdaftar")
+		return "", fmt.Errorf("email not registered")
 	}
 	// TODO Pangill jwt.checkpassword cocokin pakai password dari user
 	jwtCheck, err := jwt.CheckPasswordHash(pasword, isUser.Password)
 	if err != nil {
-		return "", fmt.Errorf("Cek Password Salah")
+		return "", fmt.Errorf("password check failed")
 	}
 	if !jwtCheck {
-		return "", fmt.Errorf("password yang Anda masukkan salah")
+		return "", fmt.Errorf("incorrect password")
 	}
 
 	parseUUID, err := uuid.Parse(isUser.ID)
 	if err != nil {
-		return "", fmt.Errorf("Parse UUID Gagal")
+		return "", fmt.Errorf("failed to parse UUID")
 	}
 
 	jwtSecret := os.Getenv("JWT_SECRET")
 	// TODO buat JWTToken
 	jwtMake, err := jwt.MakeJWT(parseUUID, jwtSecret, time.Hour*24)
 	if err != nil {
-		return "", fmt.Errorf("Pembuatan JWT gagal")
+		return "", fmt.Errorf("failed to create JWT token")
 	}
 	return jwtMake, nil
 }

@@ -2,7 +2,7 @@ package mail
 
 import (
 	"fmt"
-	"log"
+	"github.com/sirupsen/logrus"
 	"net/smtp"
 	"os"
 	"strconv"
@@ -22,7 +22,7 @@ type Config struct {
 func LoadConfig() *Config {
 	err := godotenv.Load()
 	if err != nil {
-		log.Println("⚠️  Warning: .env file not found, using system env")
+		logrus.Info("⚠️  Warning: .env file not found, using system env")
 	}
 
 	port, _ := strconv.Atoi(os.Getenv("SMTP_PORT"))
@@ -66,7 +66,7 @@ func SendWelcomeEmail(toEmail string) error {
 		return fmt.Errorf("failed to send email: %w", err)
 	}
 
-	log.Printf("✅ Welcome email sent successfully to %s", toEmail)
+	logrus.Infof("✅ Welcome email sent successfully to %s", toEmail)
 	return nil
 }
 
@@ -97,6 +97,6 @@ func SendInvoiceEmail(toEmail string) error {
 		return fmt.Errorf("failed to send email: %w", err)
 	}
 
-	log.Printf("✅ Invoice email sent successfully to %s", toEmail)
+	logrus.Infof("✅ Invoice email sent successfully to %s", toEmail)
 	return nil
 }

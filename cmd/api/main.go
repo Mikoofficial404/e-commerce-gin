@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -12,11 +11,14 @@ import (
 	"ecommerce-gin/internal/delivery/http/handler"
 	"ecommerce-gin/internal/delivery/http/router"
 	"ecommerce-gin/internal/pkg/database"
+	"ecommerce-gin/internal/pkg/logger"
 	"ecommerce-gin/internal/pkg/rabbitmq"
 	"ecommerce-gin/internal/pkg/redis"
 	"ecommerce-gin/internal/pkg/storage"
 	"ecommerce-gin/internal/repository/postgres"
 	"ecommerce-gin/internal/service"
+
+	"github.com/sirupsen/logrus"
 )
 
 // E-Commerce-Gin
@@ -25,22 +27,25 @@ import (
 // @description E-commerce-gin with a queue(rabitmq) and caching(redis) and integrated payment gateway Xendit
 // @host localhost:8080
 func main() {
+	logger.InitLogger()
+	logrus.Info("Inisialisasi Database PostgreSQL...")
+
 	db := database.DatabaseCon()
 	sqlDB, err := db.DB()
 	if err != nil {
-		log.Fatal(err)
+		logrus.Fatal("Gagal menyambung ke database: ", err)
 	}
 	defer sqlDB.Close()
 	rabbitConn, err := rabbitmq.ConnectRabbitMQ()
 	if err != nil {
-		log.Fatal("Failed to connect to RabbitMQ")
+		logrus.Fatal("Failed to connect to RabbitMQ")
 	}
 	defer rabbitConn.Close()
 	// rabbitmq.ConsumeMessage(rabbitConn, "email_queue")
 
 	rdb, err := redis.ConnectRedis()
 	if err != nil {
-		log.Fatal(err)
+		logrus.Fatal(err)
 	}
 	defer rdb.Close()
 
@@ -71,22 +76,26 @@ func main() {
 	}
 
 	go func() {
-		log.Printf("Starting server on port :%s...\n", appPort)
+		logrus.WithFields(logrus.Fields{
+			"port": appPort,
+			"env":  "development",
+		}).Info("Server Gin berhasil menyala")
+
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("Server failed to start: %v", err)
+			logrus.Fatalf("Server gagal menyala: %v", err)
 		}
 	}()
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
-	log.Println("Shutting down server...")
+	logrus.Info("Shutting down server...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
-		log.Fatal("Server forced to shutdown: ", err)
+		logrus.Fatal("Server forced to shutdown: ", err)
 	}
 
-	log.Println("Server exiting")
+	logrus.Info("Server exiting")
 }

@@ -2,7 +2,7 @@ package storage
 
 import (
 	"context"
-	"log"
+	"github.com/sirupsen/logrus"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -20,7 +20,7 @@ func ConnectS3() *s3.Client {
 	)
 
 	if err != nil {
-		log.Fatal("Gagal membuat config AWS: ", err)
+		logrus.Fatal("Gagal membuat config AWS: ", err)
 	}
 
 	client := s3.NewFromConfig(cfg, func(o *s3.Options) {

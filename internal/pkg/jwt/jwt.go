@@ -4,7 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
-	"log"
+	"github.com/sirupsen/logrus"
 	"net/http"
 	"strings"
 	"time"
@@ -64,7 +64,7 @@ func ValidateJWT(tokenString, tokenSecret string) (uuid.UUID, string, error) {
 	}
 	userID, err := uuid.Parse(claims.Subject)
 	if err != nil {
-		log.Printf("Error parsing user ID from claims: %v", err)
+		logrus.Infof("Error parsing user ID from claims: %v", err)
 		return uuid.Nil, "", err
 	}
 	return userID, claims.Role, nil

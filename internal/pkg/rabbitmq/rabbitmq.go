@@ -3,7 +3,7 @@ package rabbitmq
 import (
 	"context"
 	"ecommerce-gin/internal/pkg/mail"
-	"log"
+	"github.com/sirupsen/logrus"
 	"os"
 
 	amqp "github.com/rabbitmq/amqp091-go"
@@ -48,21 +48,21 @@ func ConsumeMessage(conn *amqp.Connection, queueName string) error {
 	go func() {
 		for d := range msgs {
 			targetEmail := string(d.Body)
-			log.Printf("📥 Received task from RabbitMQ: %s", d.Body)
+			logrus.Infof("📥 Received task from RabbitMQ: %s", d.Body)
 
 			if queueName == "email_queue" {
 				err := mail.SendWelcomeEmail(targetEmail)
 				if err != nil {
-					log.Printf("❌ Failed to send welcome email to %s: %v", targetEmail, err)
+					logrus.Infof("❌ Failed to send welcome email to %s: %v", targetEmail, err)
 				}
 			} else if queueName == "invoice_queue" {
 				err := mail.SendInvoiceEmail(targetEmail)
 				if err != nil {
-					log.Printf("❌ Failed to send invoice email to %s: %v", targetEmail, err)
+					logrus.Infof("❌ Failed to send invoice email to %s: %v", targetEmail, err)
 				}
 			}
 		}
 	}()
-	log.Printf("🚀 Started consuming messages from queue: %s", queueName)
+	logrus.Infof("🚀 Started consuming messages from queue: %s", queueName)
 	return nil
 }

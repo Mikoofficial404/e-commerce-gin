@@ -1,7 +1,7 @@
 package config
 
 import (
-	"log"
+	"github.com/sirupsen/logrus"
 	"os"
 	"strconv"
 
@@ -20,7 +20,7 @@ func LoadSMTPConfig() SMTPConfig {
 	// Load .env file
 	err := godotenv.Load()
 	if err != nil {
-		log.Println("⚠️  Warning: .env file not found, using system env")
+		logrus.Info("⚠️  Warning: .env file not found, using system env")
 	}
 
 	port, _ := strconv.Atoi(os.Getenv("SMTP_PORT"))

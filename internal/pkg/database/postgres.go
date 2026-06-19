@@ -2,7 +2,7 @@ package database
 
 import (
 	"fmt"
-	"log"
+	"github.com/sirupsen/logrus"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -13,7 +13,7 @@ import (
 func DatabaseCon() *gorm.DB {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		logrus.Fatal("Error loading .env file")
 	}
 
 	dbHost := os.Getenv("DB_HOST")
@@ -27,9 +27,9 @@ func DatabaseCon() *gorm.DB {
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		log.Fatalf("Gagal membuka database: %v", err)
+		logrus.Fatalf("Gagal membuka database: %v", err)
 	}
 
-	log.Println("Berhasil terkoneksi ke Database PostgreSQL!")
+	logrus.Info("Berhasil terkoneksi ke Database PostgreSQL!")
 	return db
 }

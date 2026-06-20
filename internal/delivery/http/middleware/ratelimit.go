@@ -27,7 +27,7 @@ func RateLimitMiddleware(redisClient *redis.Client) gin.HandlerFunc {
 
 		if count > 5 {
 			ctx.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{
-				"error": "Terlalu banyak request bos! Santai dulu 1 menit.",
+				"error": "Terlalu banyak request.",
 			})
 			return
 		}
